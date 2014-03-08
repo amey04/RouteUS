@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html> 
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=7; IE=EmulateIE9; IE=10" />
+		<base href="http://developer.here.com/apiexplorer/examples/api-for-js/routing/map-with-route-from-a-to-b.html" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<title>Nokia Maps API for JavaScript Example: Add route from A to B</title>
+		<meta name="description" content="Routing Manager offers the ability to request a route with various modes between two points"/>
+		<meta name="keywords" content="routing, services, a to b, route, direction, navigation"/>
+		<!-- For scaling content for mobile devices, setting the viewport to the width of the device-->
+		<meta name=viewport content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<!-- Styling for example container (NoteContainer & Logger)  -->
+		<link rel="stylesheet" type="text/css" href="http://developer.here.com/apiexplorer/examples/templates/js/exampleHelpers.css"/>
+		<!-- By default we add ?with=all to load every package available, it's better to change this parameter to your use case. Options ?with=maps|positioning|places|placesdata|directions|datarendering|all -->
+		<script type="text/javascript" charset="UTF-8" src="http://js.cit.api.here.com/se/2.5.3/jsl.js?with=all"></script>
+		<!-- JavaScript for example container (NoteContainer & Logger)  -->
+		<script type="text/javascript" charset="UTF-8" src="http://developer.here.com/apiexplorer/examples/templates/js/exampleHelpers.js"></script>
+		<style type="text/css">
+			html {
+				overflow:hidden;
+			}
+			
+			body {
+				margin: 0;
+				padding: 0;
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+				position: absolute;
+			}
+			
+			#mapContainer {
+				width: 100%;
+				height: 100%;
+				left: 0;
+				top: 0;
+				position: absolute;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="mapContainer"></div>
+		<div id="uiContainer"></div>
+		<script type="text/javascript" id="exampleJsSource">
+/*	Setup authentication app_id and app_code 
+*	WARNING: this is a demo-only key
+*	please register for an Evaluation, Base or Commercial key for use in your app.
+*	Just visit http://developer.here.com/get-started for more details. Thank you!
+*/
+nokia.Settings.set("app_id", "DemoAppId01082013GAL"); 
+nokia.Settings.set("app_code", "AJKnXv84fjrb0KIHawS0Tg");
+// Use staging environment (remove the line for production environment)
+nokia.Settings.set("serviceMode", "cit");
+
+// Get the DOM node to which we will append the map
+var mapContainer = document.getElementById("mapContainer");
+// Create a map inside the map container DOM node
+var map = new nokia.maps.map.Display(mapContainer, {
+		// Initial center and zoom level of the map
+		center: [52.51676875, 13.39201495],
+		zoomLevel: 18,
+		// We add the behavior component to allow panning / zooming of the map
+		components:[new nokia.maps.map.component.Behavior()]
+	}),
+	router = new nokia.maps.routing.Manager(); // create a route manager;
+	
+// The function onRouteCalculated  will be called when a route was calculated
+var onRouteCalculated = function (observedRouter, key, value) {
+		if (value == "finished") {
+			var routes = observedRouter.getRoutes();
+			
+			//create the default map representation of a route
+			var mapRoute = new nokia.maps.routing.component.RouteResultSet(routes[0]).container;
+			map.objects.add(mapRoute);
+			
+			//Zoom to the bounding box of the route
+			map.zoomTo(mapRoute.getBoundingBox(), false, "default");
+		} else if (value == "failed") {
+			alert("The routing request failed.");
+		}
+	};
+	
+/* We create on observer on router's "state" property so the above created
+ * onRouteCalculated we be called once the route is calculated
+ */
+router.addObserver("state", onRouteCalculated);
+
+// Create waypoints
+var waypoints = new nokia.maps.routing.WaypointParameterList();
+waypoints.addCoordinate(new nokia.maps.geo.Coordinate(52.516222633265954, 13.3889009369434));
+waypoints.addCoordinate(new nokia.maps.geo.Coordinate(52.51717584105763, 13.395129026281722));
+
+/* Properties such as type, transportModes, options, trafficMode can be
+ * specified as second parameter in performing the routing request.
+ * 
+ * See for the mode options the "nokia.maps.routing.Mode" section in the developer's guide
+ */
+var modes = [{
+	type: "shortest", 
+	transportModes: ["car"],
+	options: "avoidTollroad",
+	trafficMode: "default"
+}];
+
+// Trigger route calculation after the map emmits the "displayready" event
+map.addListener("displayready", function () {
+	router.calculateRoute(waypoints, modes);
+}, false);
+
+/* We create a UI notecontainer for example description
+ * NoteContainer is a UI helper function and not part of the Nokia Maps API
+ * See exampleHelpers.js for implementation details 
+ */
+var noteContainer = new NoteContainer({
+	id: "routingUi",
+	parent: document.getElementById("uiContainer"),
+	title: "A to B routing",
+	content:
+		'<p>This example shows how a route manager can be used to calculate a route from: <br/>' +
+		'<b>Westin Grand hotel, Berlin</b> <br />(52.516222,13.388900) <br/>' +
+		'to: <br/><b>Staatsoper, Berlin</b> <br /> (52.517175, 13.395129)' + 
+		'<br />and push routing result to the map.</p>'+
+		'<p>Routing manager supports various options in making a routing request like ' +
+		'setting type, transport mode and routes to avoid.</p>'
+});
+
+var infoBubbles = new nokia.maps.map.component.InfoBubbles(),
+	marker;
+
+
+/* We create a UI notecontainer for example description and controls
+ * NoteContainer is a UI helper function and not part of the Nokia Maps API
+ * See exampleHelpers.js for implementation details 
+ */
+var noteContainer = new NoteContainer({
+	id: "infoBubblesUi",
+	parent: document.getElementById("uiContainer"),
+	title: "InfoBubbles",
+	content:
+		'<p>This example shows how to add InfoBubbles, and to add rich html content to it.</p>' +
+		'<p>Click on buttons for adding specific bubbles to the map center.</p>' +
+		'<input id="bubble" type="button" value="InfoBubble"/>' +
+		'<input id="htmlBubble" type="button" value="InfoBubble with html content"/>'
+});
+
+/* We create a new UI Loggger to display log messages
+ * Logger is a UI helper function and not part of the Nokia Maps API
+ * See exampleHelpers.js for implementation details 
+ */
+var infoBubblesLogger = new Logger({
+	id: "mapObjectsEventsLogger",
+	parent: document.getElementById("uiContainer"),
+	title: "InfoBubbles handlers log"
+});
+
+// Binding of DOM elements to several variables so we can install event handlers.
+var bubbleUiElt = document.getElementById("bubble"),
+	htmlBubbleUiElt = document.getElementById("htmlBubble"),
+
+	/* We create an infobubble using infoBubbles.openBubble.
+	 * 
+	 * openBubble(content, coordinate, onUserClose, hideCloseButton) takes for parameters 
+	 * 		- content: to be shown in the info bubble;
+	 * 		 	it can be an HTML string or an instance of nokia.maps.search.Location
+	 * 		- coordinate: An object containing the geographic coordinates 
+	 * 			of the location, where the bubble's anchor is to be placed
+	 * 		- onUserClose: A callback method which is called when bubble is closed
+	 * 		- hideCloseButton: Hides close button if set to true.
+	 */
+	bubble = infoBubbles.openBubble("InfoBubble", map.center, function () {
+		infoBubblesLogger.log("A bubble was " + this.getState());
+	});
+
+map.objects.add(marker = new nokia.maps.map.StandardMarker(map.center));
+
+// Create an InfoBubble with html content
+bubbleUiElt.onclick = function () {
+	var bubbleElt = infoBubbles.openBubble("InfoBubble", map.center, function () {
+		infoBubblesLogger.log("A bubble was " + this.getState());
+	});
+	
+	// Remove previous marker of the map
+	map.objects.remove(marker);
+	
+	// We create a new marker on the map at its center and add to the map objects collection so it will be rendered
+	map.objects.add(marker = new nokia.maps.map.StandardMarker(map.center));
+
+	/* Display's update() can be used to force an immediate re-render of the current view 
+	 * instead of the default delayed one, make this call here to make the rendering of the marker instantly.
+	 */
+	map.update(-1);
+};
+
+// Create an InfoBubble with HTML content
+htmlBubbleUiElt.onclick = function () {
+	var bubble,
+		htmlStr = '<div>' +
+		'<h2>InfoBubble with HTML content</h2>' +
+		'<img width=120 height=90 src=' +
+		'"../../res/120px-Bodemuseum.jpg" ' +
+		'alt=""/><br/><b>Museum Island, Berlin</b>' +
+		'<p><a href="' +
+		'http://en.wikipedia.org/wiki/Museum_Island" target="_blank">' +
+		'Check out info and photos on Wikipedia</a></p></div>';
+	
+	// Remove previous marker of the map
+	map.objects.remove(marker);
+	
+	// We create a infoBubble at the center of the map with given HTML String
+	bubble = infoBubbles.openBubble(htmlStr, map.center, function () {
+		infoBubblesLogger.log("A bubble with HTML content was " + this.getState());
+	});
+	
+	// Create a new marker on the map at its center and add to the map objects collection so it will be rendered
+	map.objects.add(marker = new nokia.maps.map.StandardMarker(map.center));
+
+	/* Display's update() can be used to force an immediate re-render of the current view 
+	 * instead of the default delayed one, make this call here to make the rendering of the marker instantly.
+	 */
+	map.update(-1);
+};
+
+
+		</script>
+	</body>
+</html>

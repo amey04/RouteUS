@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<META http-equiv="Content-type" content="text/html;charset=UTF-8">
+		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+		<TITLE>
+			Route Us
+		</TITLE>
+		<STYLE type="text/css">
+			HTML
+			{
+				width: 100%;
+                height: 100%;
+				background-image: url("Route.jpg");
+			}
+			.top
+			{
+                width: 900px;
+                height: 250px;
+				margin-left: 210px;
+				margin-right: 250px;
+			}
+			div.bottom
+			{
+				margin: auto;
+				margin-top: 10px;
+                padding: auto;
+                width: 740px; 
+				height: 50px;				
+			}
+						
+			</STYLE>
+
+			    <script>
+
+var rendererOptions = {
+  draggable: true
+};
+var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
+var directionsService = new google.maps.DirectionsService();
+var map;
+var intermediatePoints = [];
+
+var manhattan = new google.maps.LatLng(34.7711329, -118.9741874);
+
+function initialize() {
+
+  var mapOptions = {
+    zoom: 7,
+    center: manhattan
+  };
+  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+  directionsDisplay.setMap(map);
+  //directionsDisplay.setPanel(document.getElementById('directionsPanel'));
+
+  google.maps.event.addListener(directionsDisplay, 'directions_changed', function() {
+    computeTotalDistance(directionsDisplay.getDirections());
+  });
+
+  calcRoute();
+}
+
+  //Display Marker
+  function displayMarker(lat, longi) {
+    var myLatlng = new google.maps.LatLng(lat, longi);
+    marker = new google.maps.Marker({
+    position: myLatlng,
+    map: map
+  });
+  marker.setMap(map);
+}
+
+function calcRoute() {
+
+  var start = document.getElementById('start').value;
+  var end = document.getElementById('end').value;
+  var request = {
+    origin: start,
+    destination: end,
+    travelMode: google.maps.TravelMode.DRIVING
+  };
+
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);     
+      calculateIntermediatePoints(response);
+    }
+  });
+ 
+}
+
+function calculateIntermediatePoints(directionResult) {
+  alert("check 1");
+  var sum=15001,k=0;
+  var myRoute = directionResult.routes[0].legs[0];
+
+  for (var i = 0; i < myRoute.steps.length; i++) {
+    //alert(myRoute.steps[i].distance.value);
+    if(sum > 15000)
+    {
+      //alert(myRoute.steps[i].start_location);
+      sum=0;
+      marker = new google.maps.Marker({
+        position: myRoute.steps[i].start_location
+      });
+      intermediatePoints[k++] = marker;
+    }
+    else
+    {
+       sum+=myRoute.steps[i].distance.value;
+    }
+  }
+
+  alert(intermediatePoints.length);
+  for (var i=0; i<intermediatePoints.length; i++) {
+    alert(intermediatePoints[i]);
+    intermediatePoints[i].setMap(map);
+  };
+}
+
+function computeTotalDistance(result) {
+  var total = 0;
+  var myroute = result.routes[0];
+  for (var i = 0; i < myroute.legs.length; i++) {
+    total += myroute.legs[i].distance.value;
+  }
+  total = total / 1000.0;
+  document.getElementById('total').innerHTML = total + ' km';
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+
+
+	</HEAD>
+	<BODY>	
+			<img class="top" src="back.jpg"></img>
+			<DIV CLASS="bottom" align="center">
+				<table>
+				<form action="drag-google.html" method="GET">
+				<tr><th colspan=2>Route Us</th></tr>
+				<tr>
+					<td>Source</td>
+					<td><INPUT type="text" size="30" maxlength="255" name="start"; /></td>					
+				</tr>
+				<tr>
+					<td>Destination</td>
+					<td><INPUT type="text" size="30" maxlength="255" name="end"; /></td>
+				</tr>
+				<tr>
+					<td align="center" colspan=2><INPUT type="submit" name="submit" value="Route Us" onclick="calcRoute();" /></td>
+				</tr>
+				</form>
+				</table>
+			</DIV>
+			<img style="float: left; margin: 20px 0px 15px 100px;" src="motel.jpg" width="270" />
+			<img style="float: left; margin: 95px 0px 0px 150px;" src="food.jpg" width="280" />
+			<img style="float: left; margin: 20px 0px 15px 175px;" src="gas.jpg" width="250" />
+		<NOSCRIPT>
+	</BODY>
+</HTML>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<META http-equiv="Content-type" content="text/html;charset=UTF-8">
+		<TITLE>
+			Route Us
+		</TITLE>
+		<style type="text/javascript">
+			function checkInterests(interests)
+			{
+				if (interests != "")
+				{
+					intReturned = "";
+					for ( i = 0; i < interests.length;  i++)
+					{
+						intReturned += '<input type="checkbox" name="checkbox" value="' + interests[i] + '" />' + interests[i];
+					}
+					
+			}
+		</style>
+		<STYLE type="text/css">
+			HTML
+			{
+				width: 100%;
+                height: 100%;
+				background-image: url("Route.jpg");
+			}
+						
+			</STYLE>
+	<script>
+
+var rendererOptions = {
+  draggable: true
+};
+var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
+var directionsService = new google.maps.DirectionsService();
+var map;
+var intermediatePoints = [];
+var start, end;
+
+var manhattan = new google.maps.LatLng(34.7711329, -118.9741874);
+
+function initialize() {
+
+  var mapOptions = {
+    zoom: 7,
+    center: manhattan
+  };
+  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+  directionsDisplay.setMap(map);
+  //directionsDisplay.setPanel(document.getElementById('directionsPanel'));
+
+  google.maps.event.addListener(directionsDisplay, 'directions_changed', function() {
+    computeTotalDistance(directionsDisplay.getDirections());
+  });
+  parseArgs();
+  calcRoute();
+}
+
+  //Display Marker
+  function displayMarker(lat, longi) {
+    var myLatlng = new google.maps.LatLng(lat, longi);
+    marker = new google.maps.Marker({
+    position: myLatlng,
+    map: map
+  });
+  marker.setMap(map);
+}
+
+function parseArgs() {
+    var parameters = location.search.substring(1).split("&");
+    var temp = parameters[0].split("=");
+    start = unescape(temp[1]);
+    alert(start); //Dialog with the text you put on the textbox
+    temp = parameters[1].split("=");
+    end = unescape(temp[1]);
+    alert(end);
+}
+
+function calcRoute() {
+  //var start = document.getElementById('start').value;
+  //var end = document.getElementById('end').value;
+  var request = {
+    origin: start,
+    destination: end,
+    travelMode: google.maps.TravelMode.DRIVING
+  };
+
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);     
+      calculateIntermediatePoints(response);
+    }
+  });
+ 
+}
+
+function calculateIntermediatePoints(directionResult) {
+  var sum=15001,k=0;
+  var myRoute = directionResult.routes[0].legs[0];
+
+  for (var i = 0; i < myRoute.steps.length; i++) {
+    //alert(myRoute.steps[i].distance.value);
+    if(sum > 15000)
+    {
+      //alert(myRoute.steps[i].start_location);
+      sum=0;
+      marker = new google.maps.Marker({
+        position: myRoute.steps[i].start_location
+      });
+      intermediatePoints[k++] = marker;
+    }
+    else
+    {
+       sum+=myRoute.steps[i].distance.value;
+    }
+  }
+
+  for (var i=0; i<intermediatePoints.length; i++) {
+    intermediatePoints[i].setMap(map);
+  };
+}
+
+function computeTotalDistance(result) {
+  var total = 0;
+  var myroute = result.routes[0];
+  for (var i = 0; i < myroute.legs.length; i++) {
+    total += myroute.legs[i].distance.value;
+  }
+  total = total / 1000.0;
+  document.getElementById('total').innerHTML = total + ' km';
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+
+	</HEAD>
+	<BODY>	
+    <div id="map-canvas" style="float:left;width:70%; height:100%"></div>
+    <div id="directionsPanel" style="float:right;width:30%;height 100%">
+    <p>Total Distance: <span id="total"></span></p>
+    </div>
+    <div id="panel">
+    <b>Start: </b>
+    <input type="text" id="start" />
+    <b>End: </b>
+    <input type="text" id="end" />
+    <input type="button" name='Lookup' onclick="calcRoute();"/>
+    </div>
+    <div id="map-canvas"></div>
+	</BODY>
+</HTML>
