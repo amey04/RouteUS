@@ -86,7 +86,7 @@ var keywrd = 'wildlife';
 var waypts = [];
 var num=0;
 var name = "hidden";
-var total=0;
+
 function initialize() {
 
   var mapOptions = {
@@ -142,7 +142,7 @@ function calcRoute() {
     destination: end,
     waypoints: waypts,
     optimizeWaypoints: true,
-    travelMode: google.maps.TravelMode.WALKING
+    travelMode: google.maps.TravelMode.DRIVING
   };
 
   directionsService.route(request, function(response, status) {
@@ -157,19 +157,9 @@ function calculateIntermediatePoints(directionResult) {
   var sum=0,k=0;
   var myRoute = directionResult.routes[0].legs[0];
   startPos = myRoute.steps[0].start_location;
-  var threshhold;
-  if(total < 500)
-      threshhold = 100000;
-    else if(total < 1000)
-      threshhold = 150000;
-    else if(total < 2000)
-      threshhold = 200000;
-    else
-      threshhold = 400000;
-
 
   for (var i = 0; i < myRoute.steps.length; i++) {
-    if(sum > threshhold)
+    if(sum > 50000)
     {
       sum=0;
       marker = new google.maps.Marker({
@@ -183,9 +173,7 @@ function calculateIntermediatePoints(directionResult) {
     }
   }
   endPos = myRoute.steps[i-1].start_location;
-
-
-  for (var i=0; i<intermediatePoints.length-1; i++) {
+  for (var i=0; i<intermediatePoints.length; i++) {
     //marker = intermediatePoints[i];
     //intermediatePoints[i].setMap(map); 
   };
@@ -196,7 +184,7 @@ function calculateIntermediatePoints(directionResult) {
 }
 
 function computeTotalDistance(result) {
-  total = 0;
+  var total = 0;
   var myroute = result.routes[0];
   for (var i = 0; i < myroute.legs.length; i++) {
     total += myroute.legs[i].distance.value;
@@ -290,14 +278,9 @@ function getPlaces(marker) {
     var lat = marker.position.lat();
     var lng = marker.position.lng();
     var location = new google.maps.LatLng(lat, lng);
-    var red;
-    if(total < 2000)
-      red = 20000;
-    else
-      red = 50000;
     var request = {
       location: location,
-      radius: red,
+      radius: 50000,
       types: type,
       keyword: keywrd,
       rankby: google.maps.places.RankBy.PROMINENCE
@@ -346,7 +329,7 @@ function reCalculate() {
     type[index++] = 'museum';
   }
   if(document.getElementById("Gas_Stations").checked == 1) {
-    type[index++] = 'gas_stations';
+    type[index++] = 'gas_station';
   }
 
   if(document.getElementById("Wildlife").checked == 1) {
@@ -389,16 +372,6 @@ google.maps.event.addDomListener(window, 'load', initialize);
 </head>
 
  <body>
-<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-
-
     <div style="margin-left:1200px"><a href="RouteUs.html">Home</a></div>
     <div class= "abs"><div id="route" class="topText"></div>
     <br>
@@ -425,7 +398,6 @@ google.maps.event.addDomListener(window, 'load', initialize);
       <input type="hidden" name ='a' id='hidden5' value=''>
       <input type="hidden" name ='a' id='hidden6' value=''>
       <input type="hidden" name ='a' id='hidden7' value=''>
-	<div class="fb-like" data-href="http://www-scf.usc.edu/~ghorpade/RouteUs/RouteUs.html" data-layout="standard" data-action="like" data-show-faces="true" data-share="true"></div>
 </div>
 
 <br>
@@ -433,8 +405,8 @@ google.maps.event.addDomListener(window, 'load', initialize);
     <script type="text/javascript">window.onload = function (){var route = document.getElementById("route");
   route.innerHTML=start+" all the way to "+ end;};</script>
 
-  <div id="directions-panel" style="float: left; width:30%; height:145%; margin-top: -412.5px; background-color: white; overflow:scroll"></div>
-  <div id="map-canvas" style="float: left; width:90%; height:145%; margin-left: 180px"></div>
+  <div id="directions-panel" style="float: left; width:30%; height:600%; margin-top: -360px; background-color: white"></div>
+  <div id="map-canvas" style="float: left; width:90%; height:145%; margin-left: 190px"></div>
     
     <noscript>
   </body>
